@@ -436,6 +436,9 @@
         <h1 class="reg-title">Register</h1>
         <p class="reg-subtitle">Fill in the details below to get started</p>
 
+        <div class="mb-4 text-sm text-gray-600">
+            Only students can register. Lecturers and admins must use credentials provided by the system administrator.
+        </div>
         <form method="POST" action="{{ route('register') }}">
             @csrf
 
