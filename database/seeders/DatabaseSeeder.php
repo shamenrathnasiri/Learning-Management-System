@@ -25,12 +25,12 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
         ]);
 
-        // Lecturer user
+        // Tutor user
         User::create([
-            'name' => 'Lecturer',
-            'email' => 'lecturer@example.com',
-            'password' => bcrypt('lecturer123'),
-            'role' => 'lecturer',
+            'name' => 'Tutor',
+            'email' => 'tutor@example.com',
+            'password' => bcrypt('tutor123'),
+            'role' => 'tutor',
         ]);
 
         // Example student user
