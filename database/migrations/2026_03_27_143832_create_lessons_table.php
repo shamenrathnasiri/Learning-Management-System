@@ -13,6 +13,15 @@ return new class extends Migration
     {
         Schema::create('lessons', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('title');
+            $table->string('slug')->unique();
+            $table->text('description');
+            $table->string('thumbnail_path')->nullable();
+            $table->enum('content_type', ['text', 'video', 'file'])->default('text');
+            $table->longText('content')->nullable();
+            $table->string('video_url')->nullable();
+            $table->string('attachment_path')->nullable();
             $table->timestamps();
         });
     }
