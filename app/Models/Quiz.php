@@ -6,36 +6,40 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class Lesson extends Model
+class Quiz extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'lesson_id',
         'user_id',
         'title',
-        'slug',
         'description',
-        'thumbnail_path',
-        'content_type',
-        'content',
-        'video_url',
-        'attachment_path',
+        'passing_score',
     ];
+
+    protected $casts = [
+        'passing_score' => 'integer',
+    ];
+
+    public function lesson(): BelongsTo
+    {
+        return $this->belongsTo(Lesson::class);
+    }
 
     public function tutor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function quiz(): HasOne
+    public function questions(): HasMany
     {
-        return $this->hasOne(Quiz::class);
+        return $this->hasMany(Question::class);
     }
 
-    public function quizzes(): HasMany
+    public function attempts(): HasMany
     {
-        return $this->hasMany(Quiz::class);
+        return $this->hasMany(QuizAttempt::class);
     }
 }
