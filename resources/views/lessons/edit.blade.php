@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div>
             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#E50914]">Lessons</p>
-            <h2 class="text-2xl font-bold text-black">Edit lesson</h2>
+            <h2 class="text-2xl font-bold text-white">Edit lesson</h2>
         </div>
     </x-slot>
 
@@ -11,6 +11,7 @@
             @csrf
             @method('PUT')
             @include('lessons._form', ['lesson' => $lesson])
+            <div class="gradient-line"></div>
             <div class="flex justify-end gap-3">
                 <a href="{{ route('lessons.show', $lesson) }}" class="lms-button-secondary">Cancel</a>
                 <button class="lms-button" type="submit">Save changes</button>

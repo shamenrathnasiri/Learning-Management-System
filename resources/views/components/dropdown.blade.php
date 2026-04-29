@@ -26,8 +26,7 @@ $width = match ($width) {
             x-transition:leave-start="opacity-100 scale-100"
             x-transition:leave-end="opacity-0 scale-95"
             class="absolute z-50 mt-2 {{ $width }} rounded-2xl shadow-2xl shadow-black/50 {{ $alignmentClasses }}"
-            style="display: none;"
-            @click="open = false">
+            style="display: none;">
         <div class="rounded-2xl overflow-hidden {{ $contentClasses }}">
             {{ $content }}
         </div>
