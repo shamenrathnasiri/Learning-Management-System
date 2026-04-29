@@ -27,7 +27,7 @@
                     <div class="p-6">
                         <p class="text-xs font-semibold text-[#E50914] uppercase tracking-[0.2em]">{{ $lesson->tutor->name ?? 'Tutor' }}</p>
                         <h3 class="mt-2 text-lg font-bold text-white group-hover:text-[#E50914] transition-colors duration-300">{{ $lesson->title }}</h3>
-                        <p class="mt-3 line-clamp-2 text-sm text-white/40">{{ $lesson->description }}</p>
+                        <p class="mt-3 line-clamp-2 text-sm text-white/40">{{ \Illuminate\Support\Str::limit(strip_tags($lesson->description), 120) }}</p>
                         <div class="mt-4 flex items-center text-[#E50914] font-semibold text-sm opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-0 group-hover:translate-x-1">
                             View lesson →
                         </div>

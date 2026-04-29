@@ -32,28 +32,38 @@
                         <span class="h-1 w-1 rounded-full bg-white/20"></span>
                         <span>{{ $lesson->tutor->name ?? 'Tutor' }}</span>
                     </div>
-                    <p class="mt-4 text-base leading-7 text-white/50">{{ $lesson->description }}</p>
+                    <div class="prose prose-invert mt-4 max-w-none text-base leading-7 text-white/50">
+                        {!! $lesson->description !!}
+                    </div>
 
                     <div class="gradient-line mt-6"></div>
 
                     <div class="mt-6 rounded-3xl bg-white/[0.03] border border-white/10 p-5">
                         <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-white/30">Content</h3>
-                        @if ($lesson->content_type === 'video' && $lesson->video_url)
+                        @if ($lesson->video_url)
                             <a href="{{ $lesson->video_url }}" target="_blank" class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#E50914] hover:text-[#ff4d55] transition">
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
                                 Open video link
                             </a>
-                            @if ($lesson->content)
-                                <p class="mt-4 whitespace-pre-line text-white/50">{{ $lesson->content }}</p>
-                            @endif
-                        @elseif ($lesson->content_type === 'file' && $lesson->attachment_path)
+                        @elseif ($lesson->video_path)
+                            <a href="{{ asset('storage/'.$lesson->video_path) }}" target="_blank" class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#E50914] hover:text-[#ff4d55] transition">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                                Open uploaded video
+                            </a>
+                        @elseif ($lesson->attachment_paths)
+                            <div class="mt-3 space-y-2">
+                                @foreach ($lesson->attachment_paths as $attachment)
+                                    <a href="{{ asset('storage/'.$attachment) }}" target="_blank" class="flex items-center gap-2 text-sm font-semibold text-[#E50914] hover:text-[#ff4d55] transition">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        {{ basename($attachment) }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        @elseif ($lesson->attachment_path)
                             <a href="{{ asset('storage/'.$lesson->attachment_path) }}" target="_blank" class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#E50914] hover:text-[#ff4d55] transition">
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                                 Download file
                             </a>
-                            @if ($lesson->content)
-                                <p class="mt-4 whitespace-pre-line text-white/50">{{ $lesson->content }}</p>
-                            @endif
                         @else
                             <p class="mt-3 whitespace-pre-line text-white/50">{{ $lesson->content ?: 'This lesson currently has no additional content block.' }}</p>
                         @endif

@@ -16,13 +16,17 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/lessons', [LessonController::class, 'index'])->name('lessons.index');
+    Route::middleware('role:tutor,admin')->group(function () {
+        Route::get('/lessons/create', [LessonController::class, 'create'])->name('lessons.create');
+        Route::post('/lessons', [LessonController::class, 'store'])->name('lessons.store');
+    });
     Route::get('/lessons/{lesson}', [LessonController::class, 'show'])->name('lessons.show');
     Route::get('/quizzes/{quiz}', [QuizController::class, 'show'])->name('quizzes.show');
     Route::post('/quizzes/{quiz}/attempt', [QuizAttemptController::class, 'store'])->name('quizzes.attempt.store');
     Route::get('/quiz-attempts/{quizAttempt}', [QuizAttemptController::class, 'show'])->name('quiz-attempts.show');
 
     Route::middleware('role:tutor,admin')->group(function () {
-        Route::resource('lessons', LessonController::class)->except(['index', 'show']);
+        Route::resource('lessons', LessonController::class)->except(['index', 'show', 'create', 'store']);
         Route::get('/lessons/{lesson}/quizzes/create', [QuizController::class, 'create'])->name('lessons.quizzes.create');
         Route::post('/lessons/{lesson}/quizzes', [QuizController::class, 'store'])->name('lessons.quizzes.store');
         Route::get('/quizzes/{quiz}/edit', [QuizController::class, 'edit'])->name('quizzes.edit');
