@@ -3,7 +3,7 @@
         <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#E50914]">Lesson details</p>
-                <h2 class="text-2xl font-bold text-black">{{ $lesson->title }}</h2>
+                <h2 class="text-2xl font-bold text-white">{{ $lesson->title }}</h2>
             </div>
             <div class="flex flex-wrap gap-3">
                 @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
@@ -18,42 +18,55 @@
         <section class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
             <article class="lms-card overflow-hidden">
                 @if ($lesson->thumbnail_path)
-                    <img src="{{ asset('storage/'.$lesson->thumbnail_path) }}" alt="{{ $lesson->title }}" class="h-80 w-full object-cover">
+                    <div class="relative">
+                        <img src="{{ asset('storage/'.$lesson->thumbnail_path) }}" alt="{{ $lesson->title }}" class="h-80 w-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent"></div>
+                    </div>
                 @else
-                    <div class="flex h-80 items-center justify-center bg-gradient-to-br from-black to-[#E50914] text-6xl font-black text-white">{{ strtoupper(substr($lesson->title, 0, 1)) }}</div>
+                    <div class="flex h-80 items-center justify-center bg-gradient-to-br from-[#1a1a1a] to-[#E50914]/30 text-6xl font-black text-white">{{ strtoupper(substr($lesson->title, 0, 1)) }}</div>
                 @endif
 
                 <div class="p-6">
-                    <div class="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em] text-black/40">
+                    <div class="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em] text-white/25">
                         <span>{{ $lesson->content_type }}</span>
+                        <span class="h-1 w-1 rounded-full bg-white/20"></span>
                         <span>{{ $lesson->tutor->name ?? 'Tutor' }}</span>
                     </div>
-                    <p class="mt-4 text-base leading-7 text-black/70">{{ $lesson->description }}</p>
+                    <p class="mt-4 text-base leading-7 text-white/50">{{ $lesson->description }}</p>
 
-                    <div class="mt-6 rounded-3xl bg-black/5 p-5">
-                        <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-black/50">Content</h3>
+                    <div class="gradient-line mt-6"></div>
+
+                    <div class="mt-6 rounded-3xl bg-white/[0.03] border border-white/10 p-5">
+                        <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-white/30">Content</h3>
                         @if ($lesson->content_type === 'video' && $lesson->video_url)
-                            <a href="{{ $lesson->video_url }}" target="_blank" class="mt-3 inline-flex text-sm font-semibold text-[#E50914]">Open video link</a>
+                            <a href="{{ $lesson->video_url }}" target="_blank" class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#E50914] hover:text-[#ff4d55] transition">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                                Open video link
+                            </a>
                             @if ($lesson->content)
-                                <p class="mt-4 whitespace-pre-line text-black/70">{{ $lesson->content }}</p>
+                                <p class="mt-4 whitespace-pre-line text-white/50">{{ $lesson->content }}</p>
                             @endif
                         @elseif ($lesson->content_type === 'file' && $lesson->attachment_path)
-                            <a href="{{ asset('storage/'.$lesson->attachment_path) }}" target="_blank" class="mt-3 inline-flex text-sm font-semibold text-[#E50914]">Download file</a>
+                            <a href="{{ asset('storage/'.$lesson->attachment_path) }}" target="_blank" class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#E50914] hover:text-[#ff4d55] transition">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                Download file
+                            </a>
                             @if ($lesson->content)
-                                <p class="mt-4 whitespace-pre-line text-black/70">{{ $lesson->content }}</p>
+                                <p class="mt-4 whitespace-pre-line text-white/50">{{ $lesson->content }}</p>
                             @endif
                         @else
-                            <p class="mt-3 whitespace-pre-line text-black/70">{{ $lesson->content ?: 'This lesson currently has no additional content block.' }}</p>
+                            <p class="mt-3 whitespace-pre-line text-white/50">{{ $lesson->content ?: 'This lesson currently has no additional content block.' }}</p>
                         @endif
                     </div>
                 </div>
             </article>
 
             <aside class="space-y-6">
+                {{-- Quiz card --}}
                 <div class="lms-card p-6">
-                    <h3 class="text-lg font-bold text-black">Quiz</h3>
+                    <h3 class="text-lg font-bold text-white">Quiz</h3>
                     @if ($lesson->quiz)
-                        <p class="mt-2 text-sm text-black/60">{{ $lesson->quiz->questions->count() }} questions, passing score {{ $lesson->quiz->passing_score }}%</p>
+                        <p class="mt-2 text-sm text-white/40">{{ $lesson->quiz->questions->count() }} questions, passing score {{ $lesson->quiz->passing_score }}%</p>
                         <div class="mt-5 flex flex-wrap gap-3">
                             <a href="{{ route('quizzes.show', $lesson->quiz) }}" class="lms-button">Attempt quiz</a>
                             @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
@@ -61,7 +74,7 @@
                             @endif
                         </div>
                     @else
-                        <p class="mt-2 text-sm text-black/60">No quiz has been attached to this lesson yet.</p>
+                        <p class="mt-2 text-sm text-white/40">No quiz has been attached to this lesson yet.</p>
                         @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
                             <div class="mt-5">
                                 <a href="{{ route('lessons.quizzes.create', $lesson) }}" class="lms-button">Create quiz</a>
@@ -70,20 +83,21 @@
                     @endif
                 </div>
 
+                {{-- Metadata card --}}
                 <div class="lms-card p-6">
-                    <h3 class="text-lg font-bold text-black">Lesson metadata</h3>
+                    <h3 class="text-lg font-bold text-white">Lesson metadata</h3>
                     <dl class="mt-4 space-y-3 text-sm">
-                        <div class="flex items-center justify-between border-b border-black/10 pb-3">
-                            <dt class="text-black/50">Author</dt>
-                            <dd class="font-semibold text-black">{{ $lesson->tutor->name ?? 'Tutor' }}</dd>
+                        <div class="flex items-center justify-between border-b border-white/5 pb-3">
+                            <dt class="text-white/30">Author</dt>
+                            <dd class="font-semibold text-white">{{ $lesson->tutor->name ?? 'Tutor' }}</dd>
                         </div>
-                        <div class="flex items-center justify-between border-b border-black/10 pb-3">
-                            <dt class="text-black/50">Created</dt>
-                            <dd class="font-semibold text-black">{{ $lesson->created_at?->format('M j, Y') }}</dd>
+                        <div class="flex items-center justify-between border-b border-white/5 pb-3">
+                            <dt class="text-white/30">Created</dt>
+                            <dd class="font-semibold text-white">{{ $lesson->created_at?->format('M j, Y') }}</dd>
                         </div>
                         <div class="flex items-center justify-between">
-                            <dt class="text-black/50">Updated</dt>
-                            <dd class="font-semibold text-black">{{ $lesson->updated_at?->diffForHumans() }}</dd>
+                            <dt class="text-white/30">Updated</dt>
+                            <dd class="font-semibold text-white">{{ $lesson->updated_at?->diffForHumans() }}</dd>
                         </div>
                     </dl>
                 </div>
