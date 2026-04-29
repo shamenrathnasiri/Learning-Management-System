@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div>
             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#E50914]">Admin</p>
-            <h2 class="text-2xl font-bold text-black">Edit user</h2>
+            <h2 class="text-2xl font-bold text-white">Edit user</h2>
         </div>
     </x-slot>
 
@@ -11,6 +11,7 @@
             @csrf
             @method('PUT')
             @include('admin.users._form', ['user' => $user])
+            <div class="gradient-line"></div>
             <div class="flex justify-end gap-3">
                 <a href="{{ route('admin.users.index') }}" class="lms-button-secondary">Cancel</a>
                 <button type="submit" class="lms-button">Save changes</button>
