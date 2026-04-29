@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreLessonRequest;
 use App\Http\Requests\LessonRequest;
 use App\Models\Lesson;
 use Illuminate\Http\RedirectResponse;
@@ -20,34 +21,58 @@ class LessonController extends Controller
 
     public function create(): View
     {
-        return view('lessons.create');
+        return view('lessons.create', [
+            'courses' => [
+                1 => 'Computer Science',
+                2 => 'Mathematics',
+                3 => 'Web Development',
+                4 => 'Data Science',
+            ],
+        ]);
     }
 
-    public function store(LessonRequest $request): RedirectResponse
+    public function store(StoreLessonRequest $request): RedirectResponse
     {
         $data = $request->validated();
         $lesson = new Lesson();
+        $attachmentPaths = [];
+
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $attachment) {
+                $attachmentPaths[] = $attachment->store('lesson-attachments', 'public');
+            }
+        }
+
+        $videoPath = null;
+        if ($request->hasFile('video_file')) {
+            $videoPath = $request->file('video_file')->store('lesson-videos', 'public');
+        }
+
         $lesson->fill([
             'user_id' => $request->user()->id,
             'title' => $data['title'],
             'slug' => Str::slug($data['title']).'-'.Str::lower(Str::random(6)),
+            'course_id' => $data['course_id'],
+            'module' => $data['module'],
             'description' => $data['description'],
-            'content_type' => $data['content_type'],
-            'content' => $data['content'] ?? null,
+            'content' => $data['description'],
+            'content_type' => $videoPath || $data['video_url'] ? 'video' : ($attachmentPaths ? 'file' : 'text'),
             'video_url' => $data['video_url'] ?? null,
+            'video_path' => $videoPath,
+            'duration' => $data['duration'],
+            'release_date' => $data['release_date'],
+            'status' => $data['status'],
+            'attachment_paths' => $attachmentPaths ?: null,
+            'attachment_path' => $attachmentPaths[0] ?? null,
         ]);
 
         if ($request->hasFile('thumbnail')) {
             $lesson->thumbnail_path = $request->file('thumbnail')->store('lesson-thumbnails', 'public');
         }
 
-        if ($request->hasFile('attachment')) {
-            $lesson->attachment_path = $request->file('attachment')->store('lesson-files', 'public');
-        }
-
         $lesson->save();
 
-        return redirect()->route('lessons.show', $lesson)->with('status', 'Lesson created successfully.');
+        return redirect()->route('lessons.create')->with('status', $data['status'] === 'published' ? 'Lesson published successfully.' : 'Lesson saved as draft.');
     }
 
     public function show(Lesson $lesson): View

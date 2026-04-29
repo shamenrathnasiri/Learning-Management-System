@@ -14,14 +14,27 @@ class Lesson extends Model
 
     protected $fillable = [
         'user_id',
+        'course_id',
         'title',
         'slug',
+        'module',
         'description',
         'thumbnail_path',
         'content_type',
         'content',
         'video_url',
+        'video_path',
+        'duration',
+        'release_date',
+        'status',
         'attachment_path',
+        'attachment_paths',
+    ];
+
+    protected $casts = [
+        'release_date' => 'date',
+        'attachment_paths' => 'array',
+        'duration' => 'integer',
     ];
 
     public function tutor(): BelongsTo
