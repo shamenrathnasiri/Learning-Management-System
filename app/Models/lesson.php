@@ -27,14 +27,23 @@ class Lesson extends Model
         'duration',
         'release_date',
         'status',
+        'live_class_provider',
+        'live_class_title',
+        'live_class_start_at',
+        'live_class_duration',
+        'live_class_meeting_url',
+        'live_class_meeting_code',
+        'live_class_passcode',
         'attachment_path',
         'attachment_paths',
     ];
 
     protected $casts = [
         'release_date' => 'date',
+        'live_class_start_at' => 'datetime',
         'attachment_paths' => 'array',
         'duration' => 'integer',
+        'live_class_duration' => 'integer',
     ];
 
     public function tutor(): BelongsTo

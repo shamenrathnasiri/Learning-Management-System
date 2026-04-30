@@ -74,6 +74,65 @@
         @error('description')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
     </div>
 
+    <div class="lg:col-span-2 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <h3 class="text-sm font-semibold text-white">Live class schedule</h3>
+                <p class="mt-1 text-xs text-white/35">Add a Zoom or Google Meet session for this lesson.</p>
+            </div>
+            <span class="rounded-full border border-[#E50914]/20 bg-[#E50914]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-[#ff8088]">Optional</span>
+        </div>
+
+        <div class="mt-5 grid gap-5 lg:grid-cols-2">
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-white/80">Provider</label>
+                <select name="live_class_provider" class="lms-input cursor-pointer">
+                    <option value="" @selected(old('live_class_provider') === null || old('live_class_provider') === '')>No live class</option>
+                    <option value="zoom" @selected(old('live_class_provider') === 'zoom')>Zoom</option>
+                    <option value="google_meet" @selected(old('live_class_provider') === 'google_meet')>Google Meet</option>
+                </select>
+                @error('live_class_provider')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-white/80">Meeting title</label>
+                <input type="text" name="live_class_title" value="{{ old('live_class_title') }}" class="lms-input" placeholder="Weekly live class or revision session">
+                @error('live_class_title')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-white/80">Start date & time</label>
+                <input type="datetime-local" name="live_class_start_at" value="{{ old('live_class_start_at') }}" class="lms-input">
+                @error('live_class_start_at')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-white/80">Duration (minutes)</label>
+                <input type="number" name="live_class_duration" min="1" max="1440" step="1" value="{{ old('live_class_duration') }}" class="lms-input" placeholder="60">
+                @error('live_class_duration')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-white/80">Meeting URL</label>
+                <input type="url" name="live_class_meeting_url" value="{{ old('live_class_meeting_url') }}" class="lms-input" placeholder="https://zoom.us/j/... or https://meet.google.com/...">
+                <p class="mt-2 text-xs text-white/25">Paste the Zoom or Google Meet join link here.</p>
+                @error('live_class_meeting_url')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-white/80">Meeting code / passcode</label>
+                <input type="text" name="live_class_meeting_code" value="{{ old('live_class_meeting_code') }}" class="lms-input" placeholder="123-456-789 or ABCD1234">
+                @error('live_class_meeting_code')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
+            </div>
+
+            <div class="lg:col-span-2">
+                <label class="mb-2 block text-sm font-semibold text-white/80">Passcode</label>
+                <input type="text" name="live_class_passcode" value="{{ old('live_class_passcode') }}" class="lms-input" placeholder="Optional meeting passcode">
+                @error('live_class_passcode')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
+            </div>
+        </div>
+    </div>
+
     <div>
         <label class="mb-2 block text-sm font-semibold text-white/80">Video file</label>
         <input type="file" name="video_file" accept="video/*" class="w-full cursor-pointer rounded-2xl border-2 border-dashed border-white/15 bg-white/[0.03] px-4 py-3 text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-white/20">

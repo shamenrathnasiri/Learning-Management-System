@@ -28,6 +28,11 @@
                         <p class="text-xs font-semibold text-[#E50914] uppercase tracking-[0.2em]">{{ $lesson->tutor->name ?? 'Tutor' }}</p>
                         <h3 class="mt-2 text-lg font-bold text-white group-hover:text-[#E50914] transition-colors duration-300">{{ $lesson->title }}</h3>
                         <p class="mt-3 line-clamp-2 text-sm text-white/40">{{ \Illuminate\Support\Str::limit(strip_tags($lesson->description), 120) }}</p>
+                        @if ($lesson->live_class_provider && $lesson->live_class_start_at)
+                            <p class="mt-3 inline-flex rounded-full border border-[#E50914]/20 bg-[#E50914]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-[#ff8088]">
+                                {{ ucfirst(str_replace('_', ' ', $lesson->live_class_provider)) }} · {{ $lesson->live_class_start_at->format('M j, g:i A') }}
+                            </p>
+                        @endif
                         <div class="mt-4 flex items-center text-[#E50914] font-semibold text-sm opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-0 group-hover:translate-x-1">
                             View lesson →
                         </div>

@@ -19,9 +19,23 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('lessons.index')" :active="request()->routeIs('lessons.*')">
+                    <x-nav-link :href="route('lessons.index')" :active="request()->routeIs('lessons.index', 'lessons.show')">
                         {{ __('Lessons') }}
                     </x-nav-link>
+                    @auth
+                        @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
+                            <x-nav-link :href="route('lessons.create')" :active="request()->routeIs('lessons.create') || request()->routeIs('lessons.edit')">
+                                {{ __('Live Classes') }}
+                            </x-nav-link>
+                        @endif
+                    @endauth
+                     @auth
+                        @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
+                            <x-nav-link :href="route('quizzes.create')" :active="request()->routeIs('quizzes.create') || request()->routeIs('quizzes.edit')">
+                                {{ __('Quizzes') }}
+                            </x-nav-link>
+                        @endif
+                    @endauth
                     @auth
                         @if(auth()->user()->isAdministrator())
                             <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
@@ -82,9 +96,16 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('lessons.index')" :active="request()->routeIs('lessons.*')">
+            <x-responsive-nav-link :href="route('lessons.index')" :active="request()->routeIs('lessons.index', 'lessons.show')">
                 {{ __('Lessons') }}
             </x-responsive-nav-link>
+            @auth
+                @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
+                    <x-responsive-nav-link :href="route('lessons.create')" :active="request()->routeIs('lessons.create') || request()->routeIs('lessons.edit')">
+                        {{ __('Live Classes') }}
+                    </x-responsive-nav-link>
+                @endif
+            @endauth
             @auth
                 @if(auth()->user()->isAdministrator())
                     <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">

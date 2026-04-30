@@ -62,6 +62,13 @@ class LessonController extends Controller
             'duration' => $data['duration'],
             'release_date' => $data['release_date'],
             'status' => $data['status'],
+            'live_class_provider' => $data['live_class_provider'] ?? null,
+            'live_class_title' => $data['live_class_title'] ?? null,
+            'live_class_start_at' => $data['live_class_start_at'] ?? null,
+            'live_class_duration' => $data['live_class_duration'] ?? null,
+            'live_class_meeting_url' => $data['live_class_meeting_url'] ?? null,
+            'live_class_meeting_code' => $data['live_class_meeting_code'] ?? null,
+            'live_class_passcode' => $data['live_class_passcode'] ?? null,
             'attachment_paths' => $attachmentPaths ?: null,
             'attachment_path' => $attachmentPaths[0] ?? null,
         ]);
@@ -98,6 +105,13 @@ class LessonController extends Controller
             'content_type' => $data['content_type'],
             'content' => $data['content'] ?? null,
             'video_url' => $data['video_url'] ?? null,
+            'live_class_provider' => $data['live_class_provider'] ?? null,
+            'live_class_title' => $data['live_class_title'] ?? null,
+            'live_class_start_at' => $data['live_class_start_at'] ?? null,
+            'live_class_duration' => $data['live_class_duration'] ?? null,
+            'live_class_meeting_url' => $data['live_class_meeting_url'] ?? null,
+            'live_class_meeting_code' => $data['live_class_meeting_code'] ?? null,
+            'live_class_passcode' => $data['live_class_passcode'] ?? null,
         ]);
 
         if ($request->hasFile('thumbnail')) {

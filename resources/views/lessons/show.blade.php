@@ -93,6 +93,51 @@
                     @endif
                 </div>
 
+                @if ($lesson->live_class_provider || $lesson->live_class_meeting_url || $lesson->live_class_start_at)
+                    <div class="lms-card p-6">
+                        <h3 class="text-lg font-bold text-white">Live class</h3>
+                        <p class="mt-2 text-sm text-white/40">{{ ucfirst(str_replace('_', ' ', $lesson->live_class_provider ?? 'Live class')) }}</p>
+                        @if ($lesson->live_class_title)
+                            <p class="mt-3 text-sm font-semibold text-white">{{ $lesson->live_class_title }}</p>
+                        @endif
+
+                        <dl class="mt-4 space-y-3 text-sm">
+                            @if ($lesson->live_class_start_at)
+                                <div class="flex items-center justify-between gap-4 border-b border-white/5 pb-3">
+                                    <dt class="text-white/30">Starts</dt>
+                                    <dd class="font-semibold text-white">{{ $lesson->live_class_start_at->format('M j, Y g:i A') }}</dd>
+                                </div>
+                            @endif
+                            @if ($lesson->live_class_duration)
+                                <div class="flex items-center justify-between gap-4 border-b border-white/5 pb-3">
+                                    <dt class="text-white/30">Duration</dt>
+                                    <dd class="font-semibold text-white">{{ $lesson->live_class_duration }} min</dd>
+                                </div>
+                            @endif
+                            @if ($lesson->live_class_meeting_code)
+                                <div class="flex items-center justify-between gap-4 border-b border-white/5 pb-3">
+                                    <dt class="text-white/30">Meeting code</dt>
+                                    <dd class="font-semibold text-white">{{ $lesson->live_class_meeting_code }}</dd>
+                                </div>
+                            @endif
+                            @if ($lesson->live_class_passcode)
+                                <div class="flex items-center justify-between gap-4">
+                                    <dt class="text-white/30">Passcode</dt>
+                                    <dd class="font-semibold text-white">{{ $lesson->live_class_passcode }}</dd>
+                                </div>
+                            @endif
+                        </dl>
+
+                        @if ($lesson->live_class_meeting_url)
+                            <div class="mt-5">
+                                <a href="{{ $lesson->live_class_meeting_url }}" target="_blank" class="lms-button w-full">
+                                    Join {{ ucfirst(str_replace('_', ' ', $lesson->live_class_provider ?? 'class')) }}
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
                 {{-- Metadata card --}}
                 <div class="lms-card p-6">
                     <h3 class="text-lg font-bold text-white">Lesson metadata</h3>
