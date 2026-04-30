@@ -9,6 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('lessons', function (Blueprint $table) {
+            if (! Schema::hasColumn('lessons', 'description')) {
+                $table->text('description')->nullable();
+            }
+
             if (! Schema::hasColumn('lessons', 'course_id')) {
                 $table->unsignedBigInteger('course_id')->nullable();
             }
@@ -42,6 +46,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('lessons', function (Blueprint $table) {
+            if (Schema::hasColumn('lessons', 'description')) {
+                $table->dropColumn('description');
+            }
+
             if (Schema::hasColumn('lessons', 'status')) {
                 $table->dropColumn('status');
             }

@@ -16,7 +16,7 @@
 
     <div class="lg:col-span-2">
         <label class="block text-sm font-semibold text-white/80 mb-2">Description *</label>
-        <textarea name="description" rows="4" class="lms-input" placeholder="Write a brief description of the lesson" required>{{ old('description', $lesson->description ?? '') }}</textarea>
+        <textarea id="lesson_description" name="description" rows="4" class="lms-input" placeholder="Write an engaging lesson description for students" required>{{ old('description', $lesson->description ?? '') }}</textarea>
         @error('description')<p class="mt-2 text-xs text-[#E50914] font-semibold">{{ $message }}</p>@enderror
     </div>
 
