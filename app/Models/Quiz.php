@@ -12,14 +12,21 @@ class Quiz extends Model
     use HasFactory;
 
     protected $fillable = [
+        'course_id',
         'lesson_id',
         'user_id',
         'title',
         'description',
+        'instructions',
+        'time_limit_minutes',
+        'total_marks',
         'passing_score',
     ];
 
     protected $casts = [
+        'course_id' => 'integer',
+        'time_limit_minutes' => 'integer',
+        'total_marks' => 'integer',
         'passing_score' => 'integer',
     ];
 

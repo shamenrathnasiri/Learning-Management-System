@@ -21,10 +21,15 @@ class Question extends Model
         'option_three',
         'option_four',
         'correct_option',
+        'type',
+        'marks',
+        'explanation',
+        'correct_answer',
     ];
 
     protected $casts = [
         'correct_option' => 'integer',
+        'marks' => 'integer',
     ];
 
     public function quiz(): BelongsTo

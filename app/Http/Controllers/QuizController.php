@@ -24,33 +24,39 @@ class QuizController extends Controller
             ->take(6)
             ->get();
 
-        $stats = [
-            'lessons' => $lessons->count(),
-            'quizzes' => $recentQuizzes->count(),
-            'ready' => $lessons->whereNull('quiz')->count(),
+        $courses = [
+            1 => 'Computer Science',
+            2 => 'Mathematics',
+            3 => 'Web Development',
+            4 => 'Data Science',
         ];
 
-        return view('quizzes.hub', compact('lessons', 'recentQuizzes', 'stats'));
+        return view('quizzes.hub', compact('lessons', 'recentQuizzes', 'courses'));
     }
 
     public function create(Lesson $lesson): View
     {
-        return view('quizzes.create', compact('lesson'));
+        return view('quizzes.create', [
+            'lesson' => $lesson,
+            'courses' => [
+                1 => 'Computer Science',
+                2 => 'Mathematics',
+                3 => 'Web Development',
+                4 => 'Data Science',
+            ],
+        ]);
+    }
+
+    public function storeHub(QuizRequest $request): RedirectResponse
+    {
+        $quiz = $this->persistQuiz($request);
+
+        return redirect()->route('quizzes.show', $quiz)->with('status', 'Quiz created successfully.');
     }
 
     public function store(QuizRequest $request, Lesson $lesson): RedirectResponse
     {
-        $quiz = Quiz::create([
-            'lesson_id' => $lesson->id,
-            'user_id' => $request->user()->id,
-            'title' => $request->validated('title'),
-            'description' => $request->validated('description'),
-            'passing_score' => $request->validated('passing_score'),
-        ]);
-
-        foreach ($request->validated('questions') as $questionData) {
-            $quiz->questions()->create($questionData);
-        }
+        $quiz = $this->persistQuiz($request, $lesson);
 
         return redirect()->route('lessons.show', $lesson)->with('status', 'Quiz published successfully.');
     }
@@ -66,20 +72,36 @@ class QuizController extends Controller
     {
         $quiz->load('questions', 'lesson');
 
-        return view('quizzes.edit', compact('quiz'));
+        return view('quizzes.edit', [
+            'quiz' => $quiz,
+            'courses' => [
+                1 => 'Computer Science',
+                2 => 'Mathematics',
+                3 => 'Web Development',
+                4 => 'Data Science',
+            ],
+            'lessons' => Lesson::query()->latest()->get(),
+        ]);
     }
 
     public function update(QuizRequest $request, Quiz $quiz): RedirectResponse
     {
+        $data = $request->validated();
+
         $quiz->update([
-            'title' => $request->validated('title'),
-            'description' => $request->validated('description'),
-            'passing_score' => $request->validated('passing_score'),
+            'course_id' => $data['course_id'] ?? $quiz->course_id,
+            'lesson_id' => $data['lesson_id'] ?? $quiz->lesson_id,
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'instructions' => $data['instructions'] ?? null,
+            'time_limit_minutes' => $data['time_limit_minutes'] ?? null,
+            'total_marks' => $data['total_marks'],
+            'passing_score' => $data['passing_score'],
         ]);
 
         $quiz->questions()->delete();
 
-        foreach ($request->validated('questions') as $questionData) {
+        foreach ($data['questions'] as $questionData) {
             $quiz->questions()->create($questionData);
         }
 
@@ -91,6 +113,35 @@ class QuizController extends Controller
         $lesson = $quiz->lesson;
         $quiz->delete();
 
-        return redirect()->route('lessons.show', $lesson)->with('status', 'Quiz deleted successfully.');
+        if ($lesson) {
+            return redirect()->route('lessons.show', $lesson)->with('status', 'Quiz deleted successfully.');
+        }
+
+        return redirect()->route('quizzes.create')->with('status', 'Quiz deleted successfully.');
+    }
+
+    private function persistQuiz(QuizRequest $request, ?Lesson $lesson = null): Quiz
+    {
+        $data = $request->validated();
+        $selectedLessonId = $lesson?->id ?? ($data['lesson_id'] ?? null);
+        $selectedCourseId = $data['course_id'] ?? $lesson?->course_id ?? null;
+
+        $quiz = Quiz::create([
+            'course_id' => $selectedCourseId,
+            'lesson_id' => $selectedLessonId,
+            'user_id' => $request->user()->id,
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'instructions' => $data['instructions'] ?? null,
+            'time_limit_minutes' => $data['time_limit_minutes'] ?? null,
+            'total_marks' => $data['total_marks'],
+            'passing_score' => $data['passing_score'],
+        ]);
+
+        foreach ($data['questions'] as $questionData) {
+            $quiz->questions()->create($questionData);
+        }
+
+        return $quiz;
     }
 }
