@@ -5,9 +5,12 @@
                 <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#E50914]">Lessons</p>
                 <h2 class="text-2xl font-bold text-white">Browse learning content</h2>
             </div>
-            @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
-                <a href="{{ route('lessons.create') }}" class="lms-button">Create lesson</a>
-            @endif
+            <div class="flex flex-wrap gap-3">
+                @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
+                    <a href="{{ route('lessons.create') }}" class="lms-button-secondary">Schedule live class</a>
+                    <a href="{{ route('lessons.create') }}" class="lms-button">Create lesson</a>
+                @endif
+            </div>
         </div>
     </x-slot>
 

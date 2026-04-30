@@ -24,14 +24,7 @@
                     </x-nav-link>
                     @auth
                         @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
-                            <x-nav-link :href="route('lessons.create')" :active="request()->routeIs('lessons.create') || request()->routeIs('lessons.edit')">
-                                {{ __('Live Classes') }}
-                            </x-nav-link>
-                        @endif
-                    @endauth
-                     @auth
-                        @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
-                            <x-nav-link :href="route('quizzes.create')" :active="request()->routeIs('quizzes.create') || request()->routeIs('quizzes.edit')">
+                            <x-nav-link :href="route('quizzes.create')" :active="request()->routeIs('quizzes.*') || request()->routeIs('lessons.quizzes.*')">
                                 {{ __('Quizzes') }}
                             </x-nav-link>
                         @endif
@@ -101,8 +94,8 @@
             </x-responsive-nav-link>
             @auth
                 @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
-                    <x-responsive-nav-link :href="route('lessons.create')" :active="request()->routeIs('lessons.create') || request()->routeIs('lessons.edit')">
-                        {{ __('Live Classes') }}
+                    <x-responsive-nav-link :href="route('quizzes.create')" :active="request()->routeIs('quizzes.*') || request()->routeIs('lessons.quizzes.*')">
+                        {{ __('Quizzes') }}
                     </x-responsive-nav-link>
                 @endif
             @endauth

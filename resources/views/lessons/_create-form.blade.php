@@ -46,7 +46,7 @@
     <div class="lg:col-span-2">
         <label class="mb-2 block text-sm font-semibold text-white/80">Thumbnail image</label>
         <input type="file" name="thumbnail" accept="image/*" class="w-full cursor-pointer rounded-2xl border-2 border-dashed border-white/15 bg-white/[0.03] px-4 py-3 text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-[#E50914] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-[#ff1a25]">
-        <p class="mt-2 text-xs text-white/25">PNG, JPG, or WEBP up to 2MB.</p>
+        <p class="mt-2 text-xs text-white/25">Optional. PNG, JPG, or WEBP up to 2MB.</p>
         @error('thumbnail')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
     </div>
 
@@ -136,20 +136,21 @@
     <div>
         <label class="mb-2 block text-sm font-semibold text-white/80">Video file</label>
         <input type="file" name="video_file" accept="video/*" class="w-full cursor-pointer rounded-2xl border-2 border-dashed border-white/15 bg-white/[0.03] px-4 py-3 text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-white/20">
-        <p class="mt-2 text-xs text-white/25">MP4, MOV, WMV, or WebM up to 50MB.</p>
+        <p class="mt-2 text-xs text-white/25">Optional. MP4, MOV, WMV, or WebM up to 50MB.</p>
         @error('video_file')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
     </div>
 
     <div>
         <label class="mb-2 block text-sm font-semibold text-white/80">YouTube / Vimeo URL</label>
         <input type="url" name="video_url" value="{{ old('video_url') }}" class="lms-input" placeholder="https://youtube.com/... or https://vimeo.com/...">
+        <p class="mt-2 text-xs text-white/25">Optional. Use this if you do not upload a video file.</p>
         @error('video_url')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
     </div>
 
     <div class="lg:col-span-2">
         <label class="mb-2 block text-sm font-semibold text-white/80">Attachments</label>
         <input type="file" name="attachments[]" multiple accept=".pdf,.doc,.docx,image/*" class="w-full cursor-pointer rounded-2xl border-2 border-dashed border-white/15 bg-white/[0.03] px-4 py-3 text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-white/20">
-        <p class="mt-2 text-xs text-white/25">Upload PDFs, Word files, and images. You can select multiple files.</p>
+        <p class="mt-2 text-xs text-white/25">Optional. Upload PDFs, Word files, and images. You can select multiple files.</p>
         @error('attachments')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
         @error('attachments.*')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
     </div>

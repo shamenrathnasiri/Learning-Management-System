@@ -11,6 +11,28 @@ use Illuminate\View\View;
 
 class QuizController extends Controller
 {
+    public function createHub(): View
+    {
+        $lessons = Lesson::query()
+            ->with(['tutor', 'quiz.questions'])
+            ->latest()
+            ->get();
+
+        $recentQuizzes = Quiz::query()
+            ->with(['lesson.tutor', 'questions'])
+            ->latest()
+            ->take(6)
+            ->get();
+
+        $stats = [
+            'lessons' => $lessons->count(),
+            'quizzes' => $recentQuizzes->count(),
+            'ready' => $lessons->whereNull('quiz')->count(),
+        ];
+
+        return view('quizzes.hub', compact('lessons', 'recentQuizzes', 'stats'));
+    }
+
     public function create(Lesson $lesson): View
     {
         return view('quizzes.create', compact('lesson'));

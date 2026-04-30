@@ -17,6 +17,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/lessons', [LessonController::class, 'index'])->name('lessons.index');
     Route::middleware('role:tutor,admin')->group(function () {
+        Route::get('/quizzes/create', [QuizController::class, 'createHub'])->name('quizzes.create');
         Route::get('/lessons/create', [LessonController::class, 'create'])->name('lessons.create');
         Route::post('/lessons', [LessonController::class, 'store'])->name('lessons.store');
     });
