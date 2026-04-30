@@ -79,6 +79,27 @@
 		background: rgba(229, 9, 20, 0.03);
 	}
 
+	.lms-rich-editor-toolbar {
+		@apply flex flex-wrap items-center gap-2 rounded-t-2xl border border-white/10 border-b-0 bg-white/[0.04] p-2;
+	}
+
+	.lms-rich-editor-button {
+		@apply inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-sm font-semibold text-white/80 transition-all duration-200;
+	}
+
+	.lms-rich-editor-button:hover {
+		@apply border-[#E50914]/50 bg-white/10 text-white;
+	}
+
+	.lms-rich-editor-surface {
+		@apply min-h-[240px] rounded-b-2xl rounded-t-none leading-7 text-white;
+	}
+
+	.lms-rich-editor-surface:empty::before {
+		content: attr(data-placeholder);
+		color: rgba(255, 255, 255, 0.3);
+	}
+
 	/* ── Glow Effects ────────────────────────────────────────────── */
 	.glow-red {
 		box-shadow: 0 0 60px rgba(229, 9, 20, 0.15), 0 0 120px rgba(229, 9, 20, 0.05);

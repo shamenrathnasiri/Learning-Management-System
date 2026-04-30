@@ -15,7 +15,7 @@ class LessonRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string', 'max:2000'],
+            'description' => ['required', 'string', 'max:10000'],
             'thumbnail' => ['nullable', 'image', 'max:2048'],
             'content_type' => ['required', 'in:text,video,file'],
             'content' => ['nullable', 'string'],

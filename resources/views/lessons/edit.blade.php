@@ -7,7 +7,7 @@
     </x-slot>
 
     <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-        <form method="POST" action="{{ route('lessons.update', $lesson) }}" enctype="multipart/form-data" class="lms-card space-y-6 p-6">
+        <form method="POST" action="{{ route('lessons.update', $lesson) }}" enctype="multipart/form-data" class="lms-card space-y-6 p-6" data-rich-text-form>
             @csrf
             @method('PUT')
             @include('lessons._form', ['lesson' => $lesson])
@@ -18,39 +18,4 @@
             </div>
         </form>
     </div>
-
-    @push('scripts')
-        <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                if (window.tinymce) {
-                    tinymce.init({
-                        selector: '#lesson_description',
-                        height: 320,
-                        menubar: false,
-                        branding: false,
-                        skin: 'oxide-dark',
-                        content_css: 'dark',
-                        plugins: 'lists link table code preview autoresize',
-                        toolbar: 'blocks | undo redo | bold italic underline | bullist numlist | link table | code preview',
-                        block_formats: 'Paragraph=p; Section=h2; Subsection=h3; Small heading=h4',
-                        forced_root_block: 'p',
-                        convert_newlines_to_brs: false,
-                        setup: function (editor) {
-                            editor.on('change keyup', function () {
-                                editor.save();
-                            });
-                        }
-                    });
-                }
-
-                const lessonForm = document.querySelector('form[action="{{ route('lessons.update', $lesson) }}"]');
-                if (lessonForm && window.tinymce) {
-                    lessonForm.addEventListener('submit', function () {
-                        window.tinymce.triggerSave();
-                    });
-                }
-            });
-        </script>
-    @endpush
 </x-app-layout>

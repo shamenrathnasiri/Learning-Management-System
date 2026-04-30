@@ -17,7 +17,7 @@ class StoreLessonRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'course_id' => ['required', 'integer', 'between:1,4'],
             'module' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string'],
+            'description' => ['required', 'string', 'max:10000'],
             'thumbnail' => ['nullable', 'image', 'max:2048'],
             'video_file' => ['nullable', 'file', 'mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/webm', 'max:51200', 'required_without:video_url'],
             'video_url' => ['nullable', 'url', 'max:2048', 'required_without:video_file'],

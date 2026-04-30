@@ -16,7 +16,25 @@
 
     <div class="lg:col-span-2">
         <label class="block text-sm font-semibold text-white/80 mb-2">Description *</label>
-        <textarea id="lesson_description" name="description" rows="4" class="lms-input" placeholder="Write an engaging lesson description for students" required>{{ old('description', $lesson->description ?? '') }}</textarea>
+        <div class="mt-2" data-rich-text-editor>
+            <div class="lms-rich-editor-toolbar" data-editor-toolbar>
+                <button type="button" class="lms-rich-editor-button" data-editor-action="bold" aria-label="Bold">B</button>
+                <button type="button" class="lms-rich-editor-button italic" data-editor-action="italic" aria-label="Italic">I</button>
+                <button type="button" class="lms-rich-editor-button underline" data-editor-action="underline" aria-label="Underline">U</button>
+                <button type="button" class="lms-rich-editor-button" data-editor-action="insertUnorderedList" aria-label="Bullet list">•</button>
+                <button type="button" class="lms-rich-editor-button" data-editor-action="insertOrderedList" aria-label="Numbered list">1.</button>
+                <button type="button" class="lms-rich-editor-button" data-editor-action="link" aria-label="Insert link">↗</button>
+            </div>
+            <div
+                class="lms-input lms-rich-editor-surface"
+                data-editor-surface
+                contenteditable="true"
+                role="textbox"
+                aria-multiline="true"
+                data-placeholder="Write an engaging lesson description for students"
+            >{!! old('description', $lesson->description ?? '') !!}</div>
+            <textarea name="description" class="hidden" data-editor-input required>{{ old('description', $lesson->description ?? '') }}</textarea>
+        </div>
         @error('description')<p class="mt-2 text-xs text-[#E50914] font-semibold">{{ $message }}</p>@enderror
     </div>
 
