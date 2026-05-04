@@ -85,6 +85,9 @@
     $assignmentLesson = isset($lesson) ? $lesson : null;
     $resultVisibility = old('result_visibility', $quiz->result_visibility ?? 'immediate');
     $maxAttempts = old('max_attempts', $quiz->max_attempts ?? '');
+    $startsAt = old('starts_at', isset($quiz) && $quiz->starts_at ? $quiz->starts_at->format('Y-m-d\TH:i') : '');
+    $endsAt = old('ends_at', isset($quiz) && $quiz->ends_at ? $quiz->ends_at->format('Y-m-d\TH:i') : '');
+    $publishNow = old('publish_now', $quiz->is_published ?? false);
 @endphp
 
 <div class="grid gap-6 lg:grid-cols-2">
@@ -169,6 +172,28 @@
             @error('result_visibility')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
         </div>
 
+        <div>
+            <label class="mb-2 block text-sm font-semibold text-white/80">Start Date & Time</label>
+            <input type="datetime-local" name="starts_at" value="{{ $startsAt }}" class="lms-input">
+            <p class="mt-2 text-xs text-white/25">Optional. Before this time, students cannot attempt the quiz.</p>
+            @error('starts_at')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
+        </div>
+
+        <div>
+            <label class="mb-2 block text-sm font-semibold text-white/80">End Date & Time</label>
+            <input type="datetime-local" name="ends_at" value="{{ $endsAt }}" class="lms-input">
+            <p class="mt-2 text-xs text-white/25">Optional. After this time, the quiz is closed to students.</p>
+            @error('ends_at')<p class="mt-2 text-xs font-semibold text-[#E50914]">{{ $message }}</p>@enderror
+        </div>
+
+        <label class="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+            <input type="checkbox" name="restrict_to_enrolled_students" value="1" class="mt-1 rounded border-white/20 bg-transparent text-[#E50914] focus:ring-[#E50914]/30" @checked(old('restrict_to_enrolled_students', $quiz->restrict_to_enrolled_students ?? false))>
+            <span>
+                <span class="block text-sm font-semibold text-white/80">Restrict to enrolled students</span>
+                <span class="mt-1 block text-xs text-white/35">Only students enrolled in the linked lesson can access this quiz.</span>
+            </span>
+        </label>
+
         <label class="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
             <input type="checkbox" name="show_correct_answers" value="1" class="mt-1 rounded border-white/20 bg-transparent text-[#E50914] focus:ring-[#E50914]/30" @checked(old('show_correct_answers', $quiz->show_correct_answers ?? true))>
             <span>
@@ -182,6 +207,22 @@
             <span>
                 <span class="block text-sm font-semibold text-white/80">Show explanations after submission</span>
                 <span class="mt-1 block text-xs text-white/35">Reveals question explanations on the result page.</span>
+            </span>
+        </label>
+
+        <label class="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+            <input type="checkbox" name="auto_submit_on_expiry" value="1" class="mt-1 rounded border-white/20 bg-transparent text-[#E50914] focus:ring-[#E50914]/30" @checked(old('auto_submit_on_expiry', $quiz->auto_submit_on_expiry ?? true))>
+            <span>
+                <span class="block text-sm font-semibold text-white/80">Auto-submit when time expires</span>
+                <span class="mt-1 block text-xs text-white/35">If a time limit is set, the quiz will submit automatically when the countdown ends.</span>
+            </span>
+        </label>
+
+        <label class="flex items-start gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 lg:col-span-2">
+            <input type="checkbox" name="publish_now" value="1" class="mt-1 rounded border-white/20 bg-transparent text-emerald-300 focus:ring-emerald-300/30" @checked($publishNow)>
+            <span>
+                <span class="block text-sm font-semibold text-emerald-200">Publish quiz after saving</span>
+                <span class="mt-1 block text-xs text-emerald-100/70">When enabled, this quiz goes live immediately and enrolled students receive a notification.</span>
             </span>
         </label>
     </div>
@@ -399,6 +440,23 @@
     </template>
 </div>
 
+<div class="mt-8 rounded-3xl border border-emerald-400/20 bg-emerald-500/10 p-6" id="quiz-live-preview">
+    <div class="flex items-start justify-between gap-4">
+        <div>
+            <h3 class="text-lg font-bold text-emerald-100">Real-time Student Preview</h3>
+            <p class="text-sm text-emerald-100/75">Live rendering of how this quiz appears to students while you edit.</p>
+        </div>
+        <span class="rounded-full border border-emerald-200/20 bg-emerald-200/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-100/80">Preview</span>
+    </div>
+
+    <div class="mt-5 rounded-2xl border border-white/10 bg-black/20 p-5">
+        <h4 class="text-xl font-bold text-white" id="preview-title">Untitled quiz</h4>
+        <p class="mt-2 text-sm text-white/60" id="preview-description">Quiz description will appear here.</p>
+        <div class="mt-4 text-xs uppercase tracking-[0.2em] text-white/35" id="preview-meta"></div>
+        <div class="mt-5 space-y-4" id="preview-questions"></div>
+    </div>
+</div>
+
 <script>
     function quizBuilder(initialQuestions, mediaBaseUrl) {
         return {
@@ -531,4 +589,120 @@
             },
         };
     }
+</script>
+
+<script>
+    (function () {
+        const previewRoot = document.getElementById('quiz-live-preview');
+
+        if (!previewRoot) {
+            return;
+        }
+
+        const form = previewRoot.closest('form');
+
+        if (!form) {
+            return;
+        }
+
+        const titleEl = previewRoot.querySelector('#preview-title');
+        const descriptionEl = previewRoot.querySelector('#preview-description');
+        const metaEl = previewRoot.querySelector('#preview-meta');
+        const questionsEl = previewRoot.querySelector('#preview-questions');
+
+        const escapeHtml = (value) => String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+
+        const getValue = (name) => form.querySelector(`[name="${name}"]`)?.value?.trim() ?? '';
+        const isChecked = (name) => Boolean(form.querySelector(`[name="${name}"]`)?.checked);
+
+        const collectQuestionIndexes = () => {
+            const indexes = new Set();
+
+            form.querySelectorAll('textarea[name^="questions["][name$="][question]"]').forEach((field) => {
+                const match = field.name.match(/questions\[(\d+)\]\[question\]/);
+
+                if (match) {
+                    indexes.add(Number(match[1]));
+                }
+            });
+
+            return Array.from(indexes).sort((a, b) => a - b);
+        };
+
+        const optionKeys = ['option_one', 'option_two', 'option_three', 'option_four'];
+
+        const render = () => {
+            const title = getValue('title') || 'Untitled quiz';
+            const description = getValue('description') || 'Quiz description will appear here.';
+            const passingScore = getValue('passing_score') || '70';
+            const totalMarks = getValue('total_marks') || '100';
+            const timeLimit = getValue('time_limit_minutes');
+
+            titleEl.textContent = title;
+            descriptionEl.textContent = description;
+
+            const metaItems = [
+                `Passing ${passingScore}%`,
+                `Marks ${totalMarks}`,
+            ];
+
+            if (timeLimit) {
+                metaItems.push(`Time ${timeLimit} min`);
+            }
+
+            if (isChecked('shuffle_questions')) {
+                metaItems.push('Questions shuffled');
+            }
+
+            if (isChecked('shuffle_answers')) {
+                metaItems.push('Answers shuffled');
+            }
+
+            metaEl.textContent = metaItems.join(' • ');
+
+            const questionIndexes = collectQuestionIndexes();
+
+            if (!questionIndexes.length) {
+                questionsEl.innerHTML = '<div class="rounded-2xl border border-dashed border-white/10 p-4 text-sm text-white/40">Questions will appear here as you add them.</div>';
+                return;
+            }
+
+            const html = questionIndexes.map((index, visualIndex) => {
+                const questionText = getValue(`questions[${index}][question]`) || `Question ${visualIndex + 1}`;
+                const options = optionKeys
+                    .map((key, optionIndex) => ({
+                        label: String.fromCharCode(65 + optionIndex),
+                        text: getValue(`questions[${index}][${key}]`),
+                    }))
+                    .filter((option) => option.text);
+
+                const optionsHtml = options.length
+                    ? options.map((option) => `<li class="text-xs text-white/55">${escapeHtml(option.label)}. ${escapeHtml(option.text)}</li>`).join('')
+                    : '<li class="text-xs text-white/35">No options yet</li>';
+
+                return `
+                    <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/35">Question ${visualIndex + 1}</p>
+                        <p class="mt-2 text-sm font-semibold text-white">${escapeHtml(questionText)}</p>
+                        <ul class="mt-3 space-y-1">${optionsHtml}</ul>
+                    </div>
+                `;
+            }).join('');
+
+            questionsEl.innerHTML = html;
+        };
+
+        form.addEventListener('input', render);
+        form.addEventListener('change', render);
+
+        const observer = new MutationObserver(render);
+        observer.observe(form, { childList: true, subtree: true });
+
+        render();
+    })();
 </script>

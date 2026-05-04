@@ -77,10 +77,22 @@
                     <h3 class="text-lg font-bold text-white">Quiz</h3>
                     @if ($lesson->quiz)
                         <p class="mt-2 text-sm text-white/40">{{ $lesson->quiz->questions->count() }} questions, passing score {{ $lesson->quiz->passing_score }}%</p>
+                        <p class="mt-2 text-xs uppercase tracking-[0.2em] {{ $lesson->quiz->is_published ? 'text-emerald-300' : 'text-amber-200' }}">
+                            {{ $lesson->quiz->is_published ? 'Live quiz' : 'Draft quiz' }}
+                        </p>
                         <div class="mt-5 flex flex-wrap gap-3">
-                            <a href="{{ route('quizzes.show', $lesson->quiz) }}" class="lms-button">Attempt quiz</a>
                             @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
+                                <a href="{{ route('quizzes.show', $lesson->quiz) }}" class="lms-button">Preview / Attempt</a>
                                 <a href="{{ route('quizzes.edit', $lesson->quiz) }}" class="lms-button-secondary">Edit quiz</a>
+                            @elseif (! $lesson->quiz->is_published)
+                                <span class="rounded-full border border-amber-300/30 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-200">Quiz will be available when published.</span>
+                            @elseif ($isEnrolled)
+                                <a href="{{ route('quizzes.show', $lesson->quiz) }}" class="lms-button">Attempt quiz</a>
+                            @else
+                                <form method="POST" action="{{ route('lessons.enroll', $lesson) }}">
+                                    @csrf
+                                    <button type="submit" class="lms-button">Enroll to unlock quiz</button>
+                                </form>
                             @endif
                         </div>
                     @else

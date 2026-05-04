@@ -24,7 +24,7 @@
                     </x-nav-link>
                     @auth
                         @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
-                            <x-nav-link :href="route('quizzes.create')" :active="request()->routeIs('quizzes.*') || request()->routeIs('lessons.quizzes.*')">
+                            <x-nav-link :href="route('quizzes.analytics')" :active="request()->routeIs('quizzes.*') || request()->routeIs('lessons.quizzes.*')">
                                 {{ __('Quizzes') }}
                             </x-nav-link>
                         @endif
@@ -94,7 +94,7 @@
             </x-responsive-nav-link>
             @auth
                 @if(auth()->user()->isTutor() || auth()->user()->isAdministrator())
-                    <x-responsive-nav-link :href="route('quizzes.create')" :active="request()->routeIs('quizzes.*') || request()->routeIs('lessons.quizzes.*')">
+                    <x-responsive-nav-link :href="route('quizzes.analytics')" :active="request()->routeIs('quizzes.*') || request()->routeIs('lessons.quizzes.*')">
                         {{ __('Quizzes') }}
                     </x-responsive-nav-link>
                 @endif

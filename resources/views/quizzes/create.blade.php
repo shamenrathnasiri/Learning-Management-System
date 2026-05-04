@@ -13,7 +13,7 @@
             <div class="gradient-line"></div>
             <div class="flex justify-end gap-3">
                 <a href="{{ route('lessons.show', $lesson) }}" class="lms-button-secondary">Cancel</a>
-                <button class="lms-button" type="submit">Publish quiz</button>
+                <button class="lms-button" type="submit">Save quiz</button>
             </div>
         </form>
     </div>
