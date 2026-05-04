@@ -21,6 +21,12 @@ class Quiz extends Model
         'time_limit_minutes',
         'total_marks',
         'passing_score',
+        'shuffle_questions',
+        'shuffle_answers',
+        'max_attempts',
+        'result_visibility',
+        'show_correct_answers',
+        'show_explanations',
     ];
 
     protected $casts = [
@@ -28,6 +34,11 @@ class Quiz extends Model
         'time_limit_minutes' => 'integer',
         'total_marks' => 'integer',
         'passing_score' => 'integer',
+        'shuffle_questions' => 'boolean',
+        'shuffle_answers' => 'boolean',
+        'max_attempts' => 'integer',
+        'show_correct_answers' => 'boolean',
+        'show_explanations' => 'boolean',
     ];
 
     public function lesson(): BelongsTo
@@ -42,7 +53,7 @@ class Quiz extends Model
 
     public function questions(): HasMany
     {
-        return $this->hasMany(Question::class);
+        return $this->hasMany(Question::class)->orderBy('sort_order');
     }
 
     public function attempts(): HasMany

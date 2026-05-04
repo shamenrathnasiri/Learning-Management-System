@@ -15,7 +15,10 @@ class Question extends Model
 
     protected $fillable = [
         'quiz_id',
+        'sort_order',
         'question',
+        'difficulty',
+        'tags',
         'option_one',
         'option_two',
         'option_three',
@@ -25,11 +28,16 @@ class Question extends Model
         'marks',
         'explanation',
         'correct_answer',
+        'media_path',
+        'media_type',
+        'media_name',
     ];
 
     protected $casts = [
+        'sort_order' => 'integer',
         'correct_option' => 'integer',
         'marks' => 'integer',
+        'tags' => 'array',
     ];
 
     public function quiz(): BelongsTo

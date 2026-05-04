@@ -22,9 +22,18 @@ class QuizRequest extends FormRequest
             'time_limit_minutes' => ['nullable', 'integer', 'min:1', 'max:1440'],
             'total_marks' => ['required', 'integer', 'min:1', 'max:10000'],
             'passing_score' => ['required', 'integer', 'min:0', 'max:100'],
+            'shuffle_questions' => ['nullable', 'boolean'],
+            'shuffle_answers' => ['nullable', 'boolean'],
+            'max_attempts' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'result_visibility' => ['required', 'in:immediate,after_last_attempt,hidden'],
+            'show_correct_answers' => ['nullable', 'boolean'],
+            'show_explanations' => ['nullable', 'boolean'],
             'questions' => ['required', 'array', 'min:1'],
             'questions.*.type' => ['required', 'in:mcq,true_false,short_answer,essay'],
             'questions.*.question' => ['required', 'string', 'max:1000'],
+            'questions.*.difficulty' => ['required', 'in:easy,medium,hard'],
+            'questions.*.tags' => ['nullable', 'string', 'max:1000'],
+            'questions.*.media' => ['nullable', 'file', 'max:51200'],
             'questions.*.marks' => ['required', 'integer', 'min:0'],
             'questions.*.explanation' => ['nullable', 'string', 'max:2000'],
             // MCQ
@@ -41,6 +50,10 @@ class QuizRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator): void {
+            if ($this->input('result_visibility') === 'after_last_attempt' && ! $this->filled('max_attempts')) {
+                $validator->errors()->add('max_attempts', 'Set max attempts when result visibility is "After final attempt".');
+            }
+
             if (! $this->filled('course_id') && ! $this->filled('lesson_id')) {
                 $validator->errors()->add('lesson_id', 'Select a course or a lesson for this quiz.');
             }
