@@ -68,6 +68,16 @@ class User extends Authenticatable
         return $this->hasMany(Lesson::class);
     }
 
+    public function enrolledLessons()
+    {
+        return $this->belongsToMany(Lesson::class, 'lesson_user')->withTimestamps();
+    }
+
+    public function isEnrolledInLesson(int $lessonId): bool
+    {
+        return $this->enrolledLessons()->where('lessons.id', $lessonId)->exists();
+    }
+
     public function quizAttempts()
     {
         return $this->hasMany(QuizAttempt::class);

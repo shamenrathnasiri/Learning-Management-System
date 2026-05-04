@@ -27,6 +27,12 @@ class Quiz extends Model
         'result_visibility',
         'show_correct_answers',
         'show_explanations',
+        'starts_at',
+        'ends_at',
+        'restrict_to_enrolled_students',
+        'auto_submit_on_expiry',
+        'is_published',
+        'published_at',
     ];
 
     protected $casts = [
@@ -39,6 +45,12 @@ class Quiz extends Model
         'max_attempts' => 'integer',
         'show_correct_answers' => 'boolean',
         'show_explanations' => 'boolean',
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
+        'restrict_to_enrolled_students' => 'boolean',
+        'auto_submit_on_expiry' => 'boolean',
+        'is_published' => 'boolean',
+        'published_at' => 'datetime',
     ];
 
     public function lesson(): BelongsTo
