@@ -7,7 +7,7 @@
     </x-slot>
 
     <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-        <form method="POST" action="{{ route('lessons.quizzes.store', $lesson) }}" class="lms-card space-y-6 p-6">
+        <form method="POST" action="{{ route('lessons.quizzes.store', $lesson) }}" enctype="multipart/form-data" class="lms-card space-y-6 p-6">
             @csrf
             @include('quizzes._form', ['quiz' => null])
             <div class="gradient-line"></div>

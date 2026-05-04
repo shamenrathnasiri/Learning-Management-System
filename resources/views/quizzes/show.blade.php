@@ -47,7 +47,26 @@
             {{-- Questions --}}
             @foreach ($quiz->questions as $question)
                 <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-white/20">
-                    <h4 class="text-lg font-semibold text-white">{{ $question->question }}</h4>
+                    <div class="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/30">
+                        <span class="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1">{{ ucfirst($question->difficulty ?? 'medium') }}</span>
+                        @foreach (($question->tags ?? []) as $tag)
+                            <span class="rounded-full border border-[#E50914]/20 bg-[#E50914]/10 px-2 py-1 text-[#ff8088]">{{ $tag }}</span>
+                        @endforeach
+                    </div>
+                    <h4 class="mt-3 text-lg font-semibold text-white">{{ $question->question }}</h4>
+                    @if ($question->media_path)
+                        <div class="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3">
+                            @if (str_starts_with($question->media_type ?? '', 'image/'))
+                                <img src="{{ asset('storage/'.$question->media_path) }}" alt="Question media" class="max-h-80 rounded-2xl border border-white/10 object-cover">
+                            @elseif (str_starts_with($question->media_type ?? '', 'video/'))
+                                <video controls class="w-full rounded-2xl border border-white/10">
+                                    <source src="{{ asset('storage/'.$question->media_path) }}" type="{{ $question->media_type }}">
+                                </video>
+                            @else
+                                <a href="{{ asset('storage/'.$question->media_path) }}" target="_blank" class="inline-flex items-center rounded-full border border-white/10 px-3 py-1 text-sm font-semibold text-white/70 transition hover:border-[#E50914]/30 hover:text-white">{{ $question->media_name ?? 'Open attachment' }}</a>
+                            @endif
+                        </div>
+                    @endif
                     <div class="mt-4 space-y-3 text-sm">
                         @foreach ([
                             0 => $question->option_one,

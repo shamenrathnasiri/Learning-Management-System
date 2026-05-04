@@ -15,6 +15,17 @@ class QuizAttemptController extends Controller
 {
     public function store(AttemptQuizRequest $request, Quiz $quiz): RedirectResponse
     {
+        /** @var User $currentUser */
+        $currentUser = $request->user();
+        $isPrivilegedUser = $currentUser->isAdministrator() || $currentUser->isTutor();
+        $existingAttempts = $quiz->attempts()->where('user_id', $currentUser->id)->count();
+
+        if (! $isPrivilegedUser && $quiz->max_attempts !== null && $existingAttempts >= $quiz->max_attempts) {
+            return redirect()
+                ->route('quizzes.show', $quiz)
+                ->withErrors(['attempts' => 'You have reached the maximum number of attempts for this quiz.']);
+        }
+
         $quiz->load('questions');
         $answers = $request->validated('answers');
         $totalQuestions = $quiz->questions->count();
@@ -53,7 +64,18 @@ class QuizAttemptController extends Controller
             return $attempt;
         });
 
-        return redirect()->route('quiz-attempts.show', $attempt)->with('status', 'Quiz submitted successfully.');
+        $canViewResultNow = $isPrivilegedUser || $this->studentCanViewResult(
+            $quiz,
+            $existingAttempts + 1
+        );
+
+        if ($canViewResultNow) {
+            return redirect()->route('quiz-attempts.show', $attempt)->with('status', 'Quiz submitted successfully.');
+        }
+
+        return redirect()
+            ->route('quizzes.show', $quiz)
+            ->with('status', 'Quiz submitted successfully. Results are currently hidden by quiz settings.');
     }
 
     public function show(QuizAttempt $quizAttempt): View
@@ -67,6 +89,29 @@ class QuizAttemptController extends Controller
             403
         );
 
+        $isPrivilegedUser = $currentUser->isAdministrator() || $currentUser->isTutor();
+
+        if (! $isPrivilegedUser && Auth::id() === $quizAttempt->user_id) {
+            $attemptNumber = $quizAttempt->quiz
+                ->attempts()
+                ->where('user_id', $quizAttempt->user_id)
+                ->where('id', '<=', $quizAttempt->id)
+                ->count();
+
+            abort_unless($this->studentCanViewResult($quizAttempt->quiz, $attemptNumber), 403);
+        }
+
         return view('quizzes.result', compact('quizAttempt'));
+    }
+
+    private function studentCanViewResult(Quiz $quiz, int $attemptNumber): bool
+    {
+        return match ($quiz->result_visibility) {
+            'hidden' => false,
+            'after_last_attempt' => $quiz->max_attempts !== null
+                ? $attemptNumber >= $quiz->max_attempts
+                : true,
+            default => true,
+        };
     }
 }
