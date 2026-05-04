@@ -16,6 +16,7 @@ class AttemptQuizRequest extends FormRequest
         return [
             'answers' => ['required', 'array'],
             'answers.*' => ['required', 'integer', 'between:0,3'],
+            'attempt_started_at' => ['nullable', 'date'],
         ];
     }
 }

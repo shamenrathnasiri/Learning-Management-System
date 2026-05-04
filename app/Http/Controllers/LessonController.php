@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreLessonRequest;
 use App\Http\Requests\LessonRequest;
 use App\Models\Lesson;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -86,7 +88,32 @@ class LessonController extends Controller
     {
         $lesson->load(['tutor', 'quiz.questions', 'quiz.attempts.student']);
 
-        return view('lessons.show', compact('lesson'));
+        $currentUser = Auth::user();
+        $isEnrolled = $currentUser instanceof User
+            ? ($currentUser->isTutor() || $currentUser->isAdministrator() || $currentUser->isEnrolledInLesson($lesson->id))
+            : false;
+
+        return view('lessons.show', [
+            'lesson' => $lesson,
+            'isEnrolled' => $isEnrolled,
+        ]);
+    }
+
+    public function enroll(Lesson $lesson): RedirectResponse
+    {
+        $user = Auth::user();
+
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
+        if ($user->isTutor() || $user->isAdministrator()) {
+            return back()->with('status', 'Tutors and admins already have access to lesson quizzes.');
+        }
+
+        $lesson->enrolledStudents()->syncWithoutDetaching([$user->id]);
+
+        return back()->with('status', 'You are now enrolled in this lesson.');
     }
 
     public function edit(Lesson $lesson): View

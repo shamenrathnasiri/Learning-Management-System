@@ -3,10 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\QuizRequest;
+use App\Notifications\QuizPublishedNotification;
 use App\Models\Lesson;
+use App\Models\Question;
 use App\Models\Quiz;
+use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -51,30 +57,57 @@ class QuizController extends Controller
     public function storeHub(QuizRequest $request): RedirectResponse
     {
         $quiz = $this->persistQuiz($request);
+        $status = $quiz->is_published
+            ? 'Quiz created and published successfully.'
+            : 'Quiz saved as draft successfully.';
 
-        return redirect()->route('quizzes.show', $quiz)->with('status', 'Quiz created successfully.');
+        return redirect()->route('quizzes.show', $quiz)->with('status', $status);
     }
 
     public function store(QuizRequest $request, Lesson $lesson): RedirectResponse
     {
         $quiz = $this->persistQuiz($request, $lesson);
+        $status = $quiz->is_published
+            ? 'Quiz published successfully.'
+            : 'Quiz saved as draft successfully.';
 
-        return redirect()->route('lessons.show', $lesson)->with('status', 'Quiz published successfully.');
+        return redirect()->route('lessons.show', $lesson)->with('status', $status);
     }
 
     public function show(Quiz $quiz): View
     {
         $quiz->load(['lesson.tutor', 'questions']);
 
-        $currentUser = auth()->user();
-        $isPrivilegedViewer = $currentUser?->isTutor() || $currentUser?->isAdministrator();
-        $attemptCount = auth()->check()
-            ? $quiz->attempts()->where('user_id', auth()->id())->count()
+        $currentUser = Auth::user();
+        $isPrivilegedViewer = $currentUser instanceof User
+            ? ($currentUser->isTutor() || $currentUser->isAdministrator())
+            : false;
+        $attemptCount = Auth::check()
+            ? $quiz->attempts()->where('user_id', Auth::id())->count()
             : 0;
 
         $attemptLimitReached = ! $isPrivilegedViewer
             && $quiz->max_attempts !== null
             && $attemptCount >= $quiz->max_attempts;
+
+        $now = now();
+        $startsInFuture = ! $isPrivilegedViewer
+            && $quiz->starts_at instanceof Carbon
+            && $now->lt($quiz->starts_at);
+        $ended = ! $isPrivilegedViewer
+            && $quiz->ends_at instanceof Carbon
+            && $now->gt($quiz->ends_at);
+        $enrollmentRequired = (bool) $quiz->restrict_to_enrolled_students;
+        $hasLesson = $quiz->lesson_id !== null;
+        $isEnrolled = ! $enrollmentRequired
+            || ! $hasLesson
+            || $isPrivilegedViewer
+            || ($currentUser instanceof User && $currentUser->isEnrolledInLesson($quiz->lesson_id));
+
+        $accessDenied = $startsInFuture || $ended || ! $isEnrolled;
+        $isUnpublished = ! $isPrivilegedViewer && ! $quiz->is_published;
+        $accessDenied = $accessDenied || $isUnpublished;
+        $attemptStartedAt = $accessDenied ? null : now()->toIso8601String();
 
         $questions = $quiz->questions;
 
@@ -105,6 +138,12 @@ class QuizController extends Controller
             'presentedQuestions' => $presentedQuestions,
             'attemptCount' => $attemptCount,
             'attemptLimitReached' => $attemptLimitReached,
+            'accessDenied' => $accessDenied,
+            'startsInFuture' => $startsInFuture,
+            'ended' => $ended,
+            'isEnrolled' => $isEnrolled,
+            'isUnpublished' => $isUnpublished,
+            'attemptStartedAt' => $attemptStartedAt,
         ]);
     }
 
@@ -135,7 +174,26 @@ class QuizController extends Controller
 
         $this->deleteMediaPaths($pathsToDelete);
 
+        if ((bool) ($data['publish_now'] ?? false)) {
+            $notifiedStudents = $this->publishQuiz($quiz);
+
+            return redirect()
+                ->route('quizzes.show', $quiz)
+                ->with('status', 'Quiz updated and published successfully.'.($notifiedStudents > 0 ? " {$notifiedStudents} student notifications sent." : ''));
+        }
+
         return redirect()->route('quizzes.show', $quiz)->with('status', 'Quiz updated successfully.');
+    }
+
+    public function publish(Quiz $quiz): RedirectResponse
+    {
+        $notifiedStudents = $this->publishQuiz($quiz);
+
+        return redirect()
+            ->route('quizzes.show', $quiz)
+            ->with('status', $quiz->wasChanged('is_published')
+                ? 'Quiz is now live.'.($notifiedStudents > 0 ? " {$notifiedStudents} student notifications sent." : '')
+                : 'Quiz is already live.');
     }
 
     public function destroy(Quiz $quiz): RedirectResponse
@@ -150,6 +208,87 @@ class QuizController extends Controller
         }
 
         return redirect()->route('quizzes.create')->with('status', 'Quiz deleted successfully.');
+    }
+
+    public function analytics(): View
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && in_array($user->role, ['tutor', 'admin'], true), 403);
+
+        $quizzes = Quiz::query()
+            ->when($user->role === 'tutor', fn ($query) => $query->where('user_id', $user->id))
+            ->with([
+                'lesson',
+                'questions.answers',
+                'attempts.quiz',
+                'attempts.student',
+                'attempts.answers.question',
+            ])
+            ->latest()
+            ->get();
+
+        $quizInsights = $quizzes
+            ->map(fn (Quiz $quiz) => $this->buildQuizInsight($quiz))
+            ->values();
+
+        $allAttempts = $quizzes->flatMap(fn (Quiz $quiz) => $quiz->attempts)->values();
+        $gradedAttempts = $allAttempts->filter(fn ($attempt) => $this->attemptIsFullyGraded($attempt));
+
+        $summary = [
+            'quizzes' => $quizInsights->count(),
+            'attempts' => $allAttempts->count(),
+            'graded_attempts' => $gradedAttempts->count(),
+            'pending_attempts' => $allAttempts->count() - $gradedAttempts->count(),
+            'average_score' => $gradedAttempts->count() ? round($gradedAttempts->avg('score'), 2) : 0,
+            'average_percentage' => $gradedAttempts->count() ? round($gradedAttempts->avg('percentage'), 2) : 0,
+            'pass_rate' => $gradedAttempts->count()
+                ? round(($gradedAttempts->filter(fn ($attempt) => $attempt->percentage >= ($attempt->quiz?->passing_score ?? 0))->count() / $gradedAttempts->count()) * 100, 1)
+                : 0,
+            'fail_rate' => $gradedAttempts->count()
+                ? round(($gradedAttempts->reject(fn ($attempt) => $attempt->percentage >= ($attempt->quiz?->passing_score ?? 0))->count() / $gradedAttempts->count()) * 100, 1)
+                : 0,
+            'highest_percentage' => $gradedAttempts->count() ? round($gradedAttempts->max('percentage'), 2) : 0,
+        ];
+
+        $recentAttempts = $allAttempts
+            ->sortByDesc(fn ($attempt) => $attempt->completed_at ?? $attempt->created_at)
+            ->take(8)
+            ->values();
+
+        return view('quizzes.analytics', compact('quizInsights', 'summary', 'recentAttempts'));
+    }
+
+    public function duplicate(Quiz $quiz): RedirectResponse
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && in_array($user->role, ['tutor', 'admin'], true), 403);
+
+        $duplicate = DB::transaction(function () use ($quiz, $user): Quiz {
+            $quiz->loadMissing('questions');
+
+            $newQuiz = $quiz->replicate([
+                'is_published',
+                'published_at',
+            ]);
+
+            $newQuiz->fill([
+                'title' => $quiz->title.' (Copy)',
+                'user_id' => $user->id,
+                'is_published' => false,
+                'published_at' => null,
+            ]);
+            $newQuiz->save();
+
+            foreach ($quiz->questions as $question) {
+                $this->duplicateQuestion($question, $newQuiz);
+            }
+
+            return $newQuiz->load('lesson');
+        });
+
+        return redirect()
+            ->route('quizzes.edit', $duplicate)
+            ->with('status', 'Quiz duplicated successfully. Review the copy before publishing.');
     }
 
     private function persistQuiz(QuizRequest $request, ?Lesson $lesson = null): Quiz
@@ -174,11 +313,103 @@ class QuizController extends Controller
             'result_visibility' => $data['result_visibility'] ?? 'immediate',
             'show_correct_answers' => (bool) ($data['show_correct_answers'] ?? false),
             'show_explanations' => (bool) ($data['show_explanations'] ?? false),
+            'starts_at' => $data['starts_at'] ?? null,
+            'ends_at' => $data['ends_at'] ?? null,
+            'restrict_to_enrolled_students' => (bool) ($data['restrict_to_enrolled_students'] ?? false),
+            'auto_submit_on_expiry' => (bool) ($data['auto_submit_on_expiry'] ?? false),
         ]);
 
         $this->persistQuestions($request, $quiz, $data);
 
+        if ((bool) ($data['publish_now'] ?? false)) {
+            $this->publishQuiz($quiz);
+        }
+
         return $quiz;
+    }
+
+    private function buildQuizInsight(Quiz $quiz): array
+    {
+        $attempts = $quiz->attempts->values();
+        $gradedAttempts = $attempts->filter(fn ($attempt) => $this->attemptIsFullyGraded($attempt));
+        $pendingAttempts = $attempts->count() - $gradedAttempts->count();
+
+        return [
+            'quiz' => $quiz,
+            'attempts' => $attempts,
+            'recent_attempts' => $attempts
+                ->sortByDesc(fn ($attempt) => $attempt->completed_at ?? $attempt->created_at)
+                ->take(5)
+                ->values(),
+            'metrics' => [
+                'attempts' => $attempts->count(),
+                'graded_attempts' => $gradedAttempts->count(),
+                'pending_attempts' => $pendingAttempts,
+                'average_score' => $gradedAttempts->count() ? round($gradedAttempts->avg('score'), 2) : 0,
+                'average_percentage' => $gradedAttempts->count() ? round($gradedAttempts->avg('percentage'), 2) : 0,
+                'pass_rate' => $gradedAttempts->count()
+                    ? round(($gradedAttempts->filter(fn ($attempt) => $attempt->percentage >= $quiz->passing_score)->count() / $gradedAttempts->count()) * 100, 1)
+                    : 0,
+                'fail_rate' => $gradedAttempts->count()
+                    ? round(($gradedAttempts->reject(fn ($attempt) => $attempt->percentage >= $quiz->passing_score)->count() / $gradedAttempts->count()) * 100, 1)
+                    : 0,
+                'highest_percentage' => $gradedAttempts->count() ? round($gradedAttempts->max('percentage'), 2) : 0,
+            ],
+            'questions' => $quiz->questions->map(fn (Question $question) => $this->buildQuestionInsight($question))->values(),
+        ];
+    }
+
+    private function buildQuestionInsight(Question $question): array
+    {
+        $answers = $question->answers->values();
+        $responseCount = $answers->count();
+        $earnedMarks = $answers->sum(function ($answer) use ($question) {
+            if ($answer->marks_obtained !== null) {
+                return (int) $answer->marks_obtained;
+            }
+
+            return $answer->is_correct ? (int) $question->marks : 0;
+        });
+
+        $maxMarks = $responseCount * max(1, (int) $question->marks);
+
+        return [
+            'question' => $question,
+            'responses' => $responseCount,
+            'correct_responses' => $answers->filter(fn ($answer) => (bool) $answer->is_correct)->count(),
+            'earned_marks' => $earnedMarks,
+            'average_marks' => $responseCount ? round($earnedMarks / $responseCount, 2) : 0,
+            'performance_rate' => $maxMarks ? round(($earnedMarks / $maxMarks) * 100, 1) : 0,
+        ];
+    }
+
+    private function attemptIsFullyGraded($attempt): bool
+    {
+        return $attempt->answers->every(fn ($answer) => $answer->isGraded());
+    }
+
+    private function duplicateQuestion(Question $question, Quiz $quiz): void
+    {
+        $copiedQuestion = $question->replicate([
+            'media_path',
+            'media_type',
+            'media_name',
+        ]);
+
+        if ($question->media_path && Storage::disk('public')->exists($question->media_path)) {
+            $extension = pathinfo($question->media_path, PATHINFO_EXTENSION);
+            $mediaDirectory = trim((string) dirname($question->media_path), '.');
+            $duplicatePath = ($mediaDirectory !== '' ? $mediaDirectory.'/' : '')
+                .'quiz-duplicate-'.Str::uuid().($extension !== '' ? '.'.$extension : '');
+
+            Storage::disk('public')->copy($question->media_path, $duplicatePath);
+
+            $copiedQuestion->media_path = $duplicatePath;
+        }
+
+        $copiedQuestion->quiz_id = $quiz->id;
+        $copiedQuestion->sort_order = $question->sort_order;
+        $copiedQuestion->save();
     }
 
     private function syncQuiz(QuizRequest $request, Quiz $quiz, array $data): array
@@ -200,6 +431,10 @@ class QuizController extends Controller
             'result_visibility' => $data['result_visibility'] ?? 'immediate',
             'show_correct_answers' => (bool) ($data['show_correct_answers'] ?? false),
             'show_explanations' => (bool) ($data['show_explanations'] ?? false),
+            'starts_at' => $data['starts_at'] ?? null,
+            'ends_at' => $data['ends_at'] ?? null,
+            'restrict_to_enrolled_students' => (bool) ($data['restrict_to_enrolled_students'] ?? false),
+            'auto_submit_on_expiry' => (bool) ($data['auto_submit_on_expiry'] ?? false),
         ]);
 
         $quiz->questions()->delete();
@@ -305,5 +540,32 @@ class QuizController extends Controller
                 Storage::disk('public')->delete($question->media_path);
             }
         }
+    }
+
+    private function publishQuiz(Quiz $quiz): int
+    {
+        if ($quiz->is_published) {
+            return 0;
+        }
+
+        $quiz->forceFill([
+            'is_published' => true,
+            'published_at' => now(),
+        ])->save();
+
+        $quiz->loadMissing('lesson.enrolledStudents');
+        $students = $quiz->lesson?->enrolledStudents
+            ? $quiz->lesson->enrolledStudents->where('role', 'student')->values()
+            : collect();
+
+        if ($students->isEmpty()) {
+            return 0;
+        }
+
+        foreach ($students as $student) {
+            $student->notify(new QuizPublishedNotification($quiz));
+        }
+
+        return $students->count();
     }
 }
